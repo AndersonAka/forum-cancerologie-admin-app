@@ -11,7 +11,7 @@ export function HeroSection() {
 	return (
 		<Container pt="sm" size="lg" className={classes.wrapper}>
 			<div className={classes.inner}>
-				<Title className={classes.title}>Administration - </Title>
+				<Title className={classes.title}>Administration - Forum de cancerologie</Title>
 				<Title className={classes.subtitle}>
 					Modern Admin Dashboard Template Built with Next.js 14 and Mantine UI
 				</Title>
