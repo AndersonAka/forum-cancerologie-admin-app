@@ -4,8 +4,8 @@
   "author": "Anderson Aka",
   "description": "Admin App for Forum Cancerologie",
   "lint-staged": {
-    ".": [
-      "bun run lint"
+   "**/*.{js,ts,tsx}": [
+      "npm run lint"
     ]
   },
   "husky": {
@@ -23,12 +23,12 @@
     "test:watch": "jest --watch",
     "type-check": "tsc --noEmit",
     "release": "standard-version",
-    "release-as-major": "bun run release --release-as major",
-    "release-as-minor": "bun run release --release-as minor",
-    "release-as-patch": "bun run release --release-as patch",
+    "release-as-major": "npm run release -- --release-as major",
+    "release-as-minor": "npm run release -- --release-as minor",
+    "release-as-patch": "npm run release -- --release-as patch",
     "push-release": "git push --follow-tags origin main",
     "pull": "git rebase origin main -i",
-    "pre-commit": "bun run lint",
+    "pre-commit": "npm run lint",
     "prepare": "husky install",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
