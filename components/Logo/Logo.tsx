@@ -1,6 +1,9 @@
-import { Flex, Text } from "@mantine/core";
+"use client";
+
+import { Box, Flex, Text } from "@mantine/core";
 import Link from "next/link";
 import classes from "./Logo.module.css";
+import { IconShieldLock } from "@tabler/icons-react";
 
 interface Props {
 	width?: string;
@@ -9,18 +12,19 @@ interface Props {
 
 export const Logo: React.FC<Props> = () => {
 	return (
-		<Flex direction="row" align="center" gap={4}>
+		<Flex direction="row" justify="center" align="center" gap={4}>
 			<Link
 				href="/"
 				style={{ textDecoration: "none" }}
 				className={classes.heading}
 			>
-				<Text fw="bolder" size="xl">
-					Administration
-					<Text component="span" fw="normal" className={classes.subheading}>
+				<Flex direction="row" align="center" gap={4}>
+					<IconShieldLock size={35} stroke={1.5} color="white" />
+					<Text fw="bolder" size="xl" c="white">
+						Administration
 						- Forum de cancerologie
 					</Text>
-				</Text>
+				</Flex>
 			</Link>
 		</Flex>
 	);

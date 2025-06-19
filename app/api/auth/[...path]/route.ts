@@ -1,71 +1,75 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://cancerologie-api.onrender.com";
+	process.env.NEXT_PUBLIC_API_URL || "https://cancerologie-api.onrender.com";
 
 export async function POST(
-  request: NextRequest,
-  { params }: { params: { path: string[] } }
+	request: NextRequest,
+	{ params }: { params: { path: string[] } }
 ) {
-  try {
-    const path = params.path.join("/");
-    const body = await request.json();
+	try {
+		const path = params.path.join("/");
+		const body = await request.json();
+		console.log("body", body);
+		console.log("path", path);
+		console.log("API_URL", API_URL);
 
-    const response = await fetch(`${API_URL}/auth/${path}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
+		const response = await fetch(`${API_URL}/auth/${path}`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(body),
+		});
 
-    const data = await response.json();
+		const data = await response.json();
 
-    if (!response.ok) {
-      return NextResponse.json(
-        { error: data.message || "Une erreur est survenue" },
-        { status: response.status }
-      );
-    }
+		console.log("data", data);
+		if (!response.ok) {
+			return NextResponse.json(
+				{ error: data.message || "Une erreur est survenue" },
+				{ status: response.status }
+			);
+		}
 
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error("Erreur API:", error);
-    return NextResponse.json(
-      { error: "Erreur interne du serveur" },
-      { status: 500 }
-    );
-  }
+		return NextResponse.json(data);
+	} catch (error) {
+		console.error("Erreur API:", error);
+		return NextResponse.json(
+			{ error: "Erreur interne du serveur" },
+			{ status: 500 }
+		);
+	}
 }
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { path: string[] } }
+	request: NextRequest,
+	{ params }: { params: { path: string[] } }
 ) {
-  try {
-    const path = params.path.join("/");
-    const response = await fetch(`${API_URL}/auth/${path}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+	try {
+		const path = params.path.join("/");
+		const response = await fetch(`${API_URL}/auth/${path}`, {
+			method: "GET",
+			headers: {
+				"Content-Type": "application/json",
+			},
+		});
 
-    const data = await response.json();
+		const data = await response.json();
 
-    if (!response.ok) {
-      return NextResponse.json(
-        { error: data.message || "Une erreur est survenue" },
-        { status: response.status }
-      );
-    }
+		if (!response.ok) {
+			return NextResponse.json(
+				{ error: data.message || "Une erreur est survenue" },
+				{ status: response.status }
+			);
+		}
 
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error("Erreur API:", error);
-    return NextResponse.json(
-      { error: "Erreur interne du serveur" },
-      { status: 500 }
-    );
-  }
+		return NextResponse.json(data);
+	} catch (error) {
+		console.error("Erreur API:", error);
+		return NextResponse.json(
+			{ error: "Erreur interne du serveur" },
+			{ status: 500 }
+		);
+	}
 }

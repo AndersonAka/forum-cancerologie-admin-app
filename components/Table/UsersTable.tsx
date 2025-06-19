@@ -1,179 +1,214 @@
 "use client";
 // table de gestion des utilisateurs
 
-import { SimpleTable } from "./SimpleTable";
-import { ActionIcon, Group, Text, Badge } from "@mantine/core";
-import { IconEdit, IconTrash } from "@tabler/icons-react";
-import { useState, useEffect } from "react";
-import { notifications } from "@mantine/notifications";
-import { useRouter } from "next/navigation";
-import { MRT_PaginationState, MRT_SortingState } from "mantine-react-table";
+import React, { useState, useEffect } from 'react';
+import { Button, Group, Stack, Text, ActionIcon, Tooltip, Alert } from '@mantine/core';
+import { IconPlus, IconEdit, IconTrash, IconAlertCircle } from '@tabler/icons-react';
+import { notifications } from '@mantine/notifications';
+import { SimpleTable } from './SimpleTable';
+import UserForm from '../Form/UserForm';
+import { MRT_ColumnDef, MRT_Row, MRT_PaginationState, MRT_SortingState } from 'mantine-react-table';
+import { authService } from '@/services/auth.service';
+import ProtectedRoute from '../ProtectedRoute/ProtectedRoute';
 
 interface User {
-	id: number;
+	id: string;
 	email: string;
 	firstName: string;
 	lastName: string;
-	title: string;
-	specialty: string;
-	country: string;
-	workplace: string;
-	phoneNumber: string;
-	participationMode: "online" | "in_person";
-	gdprConsent: boolean;
-	createdAt: Date;
-	updatedAt: Date;
+	title?: string;
+	specialty?: string;
+	phoneNumber?: string;
+	role: 'SPADMIN' | 'ADMIN' | 'MANAGER';
+	createdAt: string;
+	updatedAt: string;
 }
 
-export const UsersTable = () => {
-	const router = useRouter();
+interface UsersTableProps {
+	refreshTrigger: number;
+}
+
+const UsersTable: React.FC<UsersTableProps> = ({ refreshTrigger }) => {
 	const [users, setUsers] = useState<User[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [userFormOpened, setUserFormOpened] = useState(false);
+	const [editingUser, setEditingUser] = useState<User | null>(null);
 	const [pagination, setPagination] = useState<MRT_PaginationState>({
 		pageIndex: 0,
 		pageSize: 10,
 	});
 	const [sorting, setSorting] = useState<MRT_SortingState>([]);
-	const [totalCount, setTotalCount] = useState(0);
-
-	const columns = [
-		{
-			header: "Nom complet",
-			accessorFn: (row: User) => `${row.title} ${row.firstName} ${row.lastName}`,
-		},
-		{
-			header: "Email",
-			accessorKey: "email",
-		},
-		{
-			header: "Spécialité",
-			accessorKey: "specialty",
-		},
-		{
-			header: "Pays",
-			accessorKey: "country",
-		},
-		{
-			header: "Mode de participation",
-			accessorKey: "participationMode",
-			Cell: ({ row }: { row: { original: User } }) => (
-				<Badge
-					color={row.original.participationMode === "online" ? "blue" : "green"}
-				>
-					{row.original.participationMode === "online" ? "En ligne" : "Présentiel"}
-				</Badge>
-			),
-		},
-		{
-			header: "Consentement RGPD",
-			accessorKey: "gdprConsent",
-			Cell: ({ row }: { row: { original: User } }) => (
-				<Badge color={row.original.gdprConsent ? "green" : "red"}>
-					{row.original.gdprConsent ? "Oui" : "Non"}
-				</Badge>
-			),
-		},
-	];
 
 	const fetchUsers = async () => {
+		setLoading(true);
 		try {
-			setLoading(true);
-			const skip = pagination.pageIndex * pagination.pageSize;
-			const take = pagination.pageSize;
-			const orderBy = sorting.length > 0
-				? { [sorting[0].id]: sorting[0].desc ? "desc" : "asc" }
-				: undefined;
-
-			const params = new URLSearchParams();
-			params.append("skip", skip.toString());
-			params.append("take", take.toString());
-			if (orderBy) {
-				params.append("orderBy", JSON.stringify(orderBy));
+			const token = authService.getToken();
+			if (!token) {
+				throw new Error('Token d\'authentification manquant');
 			}
 
-			const response = await fetch(
-				`/api/users?${params.toString()}`,
-				{
-					credentials: "include",
-				}
-			);
+			// Utiliser la nouvelle route pour récupérer uniquement les admins
+			const response = await fetch('/api/users/admins', {
+				headers: {
+					'Authorization': `Bearer ${token}`,
+				},
+			});
 
 			if (!response.ok) {
-				throw new Error("Erreur lors du chargement des utilisateurs");
+				throw new Error(`Erreur ${response.status}: ${response.statusText}`);
 			}
 
 			const data = await response.json();
-			setUsers(data.users);
-			setTotalCount(data.pagination.totalCount);
-			setLoading(false);
+
+			// La nouvelle route retourne directement les admins
+			if (Array.isArray(data)) {
+				setUsers(data);
+			} else if (data.users && Array.isArray(data.users)) {
+				// Fallback si la réponse est encapsulée
+				setUsers(data.users);
+			} else {
+				console.warn('Format de réponse inattendu:', data);
+				setUsers([]);
+			}
 		} catch (error) {
+			console.error('Erreur lors du chargement des utilisateurs système:', error);
 			notifications.show({
-				title: "Erreur",
-				message: "Erreur lors du chargement des utilisateurs",
-				color: "red",
+				title: 'Erreur',
+				message: 'Impossible de charger les utilisateurs système',
+				color: 'red',
 			});
+			setUsers([]);
+		} finally {
+			setLoading(false);
 		}
 	};
 
 	useEffect(() => {
 		fetchUsers();
-	}, [pagination.pageIndex, pagination.pageSize, sorting]);
+	}, [refreshTrigger]);
 
-	const handleAdd = () => {
-		router.push("/dashboard/users/new");
+	const handleEditUser = (user: User) => {
+		setEditingUser(user);
+		setUserFormOpened(true);
 	};
 
-	const handleEdit = (user: User) => {
-		router.push(`/dashboard/users/${user.id}/edit`);
+	const handleAddUser = () => {
+		setEditingUser(null);
+		setUserFormOpened(true);
 	};
 
-	const handleDelete = async (user: User) => {
-		if (window.confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?")) {
-			try {
-				const response = await fetch(`/api/users/${user.id}`, {
-					method: "DELETE",
-				});
+	const handleFormSuccess = () => {
+		fetchUsers(); // Recharger la liste après modification
+	};
 
-				if (!response.ok) {
-					throw new Error("Erreur lors de la suppression");
-				}
+	const handleFormClose = () => {
+		setUserFormOpened(false);
+		setEditingUser(null);
+	};
 
-				notifications.show({
-					title: "Succès",
-					message: "Utilisateur supprimé avec succès",
-					color: "green",
-				});
-
-				fetchUsers(); // Recharger les données
-			} catch (error) {
-				notifications.show({
-					title: "Erreur",
-					message: "Erreur lors de la suppression de l'utilisateur",
-					color: "red",
-				});
-			}
+	const getRoleLabel = (role: string) => {
+		switch (role) {
+			case 'SPADMIN':
+				return 'Super Administrateur';
+			case 'ADMIN':
+				return 'Administrateur';
+			case 'MANAGER':
+				return 'Manager';
+			default:
+				return role;
 		}
 	};
 
+	const columns: MRT_ColumnDef<User>[] = [
+		{
+			accessorKey: 'email',
+			header: 'Email',
+			size: 200,
+		},
+		{
+			accessorKey: 'title',
+			header: 'Titre',
+			size: 120,
+		},
+		{
+			accessorKey: 'firstName',
+			header: 'Prénom',
+			size: 150,
+		},
+		{
+			accessorKey: 'lastName',
+			header: 'Nom',
+			size: 150,
+		},
+		{
+			accessorKey: 'specialty',
+			header: 'Spécialité',
+			size: 150,
+		},
+		{
+			accessorKey: 'phoneNumber',
+			header: 'Téléphone',
+			size: 120,
+		},
+		{
+			accessorKey: 'role',
+			header: 'Rôle',
+			size: 120,
+			Cell: ({ cell }) => (
+				<Text size="sm" fw={500}>
+					{getRoleLabel(cell.getValue<string>())}
+				</Text>
+			),
+		},
+		{
+			accessorKey: 'createdAt',
+			header: 'Créé le',
+			size: 120,
+			Cell: ({ cell }) => (
+				<Text size="sm">
+					{new Date(cell.getValue<string>()).toLocaleDateString('fr-FR')}
+				</Text>
+			),
+		},
+	];
+
 	return (
-		<SimpleTable
-			title="Gestion des utilisateurs"
-			columns={columns}
-			data={users}
-			onAdd={handleAdd}
-			onEdit={handleEdit}
-			onDelete={handleDelete}
-			enableRowActions
-			state={{
-				pagination,
-				sorting,
-				isLoading: loading,
-			}}
-			onPaginationChange={setPagination}
-			onSortingChange={setSorting}
-			rowCount={totalCount}
-			enablePagination
-			enableSorting
-		/>
+		<ProtectedRoute requiredRoles={['SPADMIN', 'ADMIN']}>
+			<Stack gap="md">
+				<Group justify="space-between">
+					<Button
+						leftSection={<IconPlus size={16} />}
+						onClick={handleAddUser}
+						variant="filled"
+					>
+						Ajouter un utilisateur système
+					</Button>
+				</Group>
+
+				<SimpleTable
+					data={users}
+					columns={columns}
+					state={{
+						isLoading: loading,
+						pagination,
+						sorting,
+					}}
+					onPaginationChange={setPagination}
+					onSortingChange={setSorting}
+					enableRowSelection={false}
+					enableRowActions={true}
+					onEdit={handleEditUser}
+				/>
+
+				<UserForm
+					opened={userFormOpened}
+					onClose={handleFormClose}
+					user={editingUser as User}
+					onSuccess={handleFormSuccess}
+				/>
+			</Stack>
+		</ProtectedRoute>
 	);
 };
+
+export default UsersTable;

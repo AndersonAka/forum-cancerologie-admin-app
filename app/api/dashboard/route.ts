@@ -10,15 +10,10 @@ export async function GET() {
 		const cookieStore = cookies();
 		const token = cookieStore.get("auth_token");
 
-		console.log("Token présent:", !!token);
-		console.log("Valeur du token:", token?.value);
-
 		if (!token) {
 			console.log("Aucun token trouvé dans les cookies");
 			return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 		}
-
-		console.log("URL de l'API:", process.env.NEXT_PUBLIC_API_URL);
 
 		const response = await axios.get(
 			`${process.env.NEXT_PUBLIC_API_URL}/dashboard`,
@@ -30,6 +25,7 @@ export async function GET() {
 		);
 
 		console.log("Réponse de l'API:", response.status);
+		console.log("Réponse data:", response.data);
 		return NextResponse.json(response.data);
 	} catch (error) {
 		console.error(

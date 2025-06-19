@@ -5,6 +5,24 @@ import type { NextRequest } from "next/server";
 const protectedRoutes = ["/dashboard"];
 const authRoutes = ["/login", "/register"];
 
+function parseJwt(token: string): any {
+	try {
+		const base64Url = token.split(".")[1];
+		const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+		const jsonPayload = decodeURIComponent(
+			atob(base64)
+				.split("")
+				.map(function (c) {
+					return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+				})
+				.join("")
+		);
+		return JSON.parse(jsonPayload);
+	} catch (e) {
+		return null;
+	}
+}
+
 export function middleware(request: NextRequest) {
 	const token = request.cookies.get("auth_token")?.value;
 	const { pathname } = request.nextUrl;
@@ -23,6 +41,20 @@ export function middleware(request: NextRequest) {
 
 	// Si l'utilisateur est connecté
 	if (token) {
+		let role = null;
+		const payload = parseJwt(token);
+		if (payload && payload.role) {
+			role = payload.role;
+		}
+
+		// Bloquer les participants sur les routes protégées
+		if (isProtectedRoute && role === "USER") {
+			console.log("Middleware - Accès refusé pour un participant");
+			const url = new URL("/login", request.url);
+			url.searchParams.set("error", "access-denied");
+			return NextResponse.redirect(url);
+		}
+
 		// Rediriger vers le dashboard si sur une page d'authentification
 		if (isAuthPage) {
 			console.log(

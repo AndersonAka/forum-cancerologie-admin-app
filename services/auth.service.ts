@@ -34,6 +34,7 @@ export interface AuthResponse {
 		rememberMeToken: string | null;
 		createdAt: string;
 		updatedAt: string;
+		role: string;
 	};
 	message?: string;
 }

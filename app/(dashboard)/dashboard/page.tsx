@@ -1,10 +1,20 @@
+import { Suspense } from "react";
 import { DashboardContent } from "components/Dashboard/DashboardContent";
-import { PageContainer } from "components/PageContainer/PageContainer";
+import { DashboardSkeleton } from "components/LoadingSpinner/LoadingSpinner";
 
+// Metadata
+export const metadata = {
+	title: "Tableau de bord",
+	description: "Administration Forum de Cancerologie de ROCHE",
+};
+
+// Page
 export default function Dashboard() {
-  return (
-    <PageContainer title="Dashboard">
-      <DashboardContent />
-    </PageContainer>
-  );
+	return (
+		<Suspense fallback={
+			<DashboardSkeleton />
+		}>
+			<DashboardContent />
+		</Suspense>
+	);
 }

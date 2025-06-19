@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Flex, ScrollArea, LoadingOverlay } from "@mantine/core";
+import { Button, Flex, ScrollArea, LoadingOverlay, Skeleton } from "@mantine/core";
 import { useState } from "react";
 import { UserButton } from "components/UserButton/UserButton";
 import type { NavItem } from "types/nav-item";
@@ -15,9 +15,11 @@ interface Props {
 }
 
 export function Navbar({ data }: Props) {
-	const { user, logout } = useAuth();
+	const { user, role, logout } = useAuth();
 	const router = useRouter();
 	const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+	const isLoading = !user || !role || isLoggingOut;
 
 	const handleLogout = async () => {
 		setIsLoggingOut(true);
@@ -31,7 +33,13 @@ export function Navbar({ data }: Props) {
 		}
 	};
 
-	const links = data.map((item) => (
+	// Filtrage des liens selon le rôle
+	const filteredLinks = data.filter((item) => {
+		if (!item.roles) return true; // Si pas de restriction, visible pour tous
+		return role && item.roles.includes(role);
+	});
+
+	const links = filteredLinks.map((item) => (
 		<NavLinksGroup key={item.label} {...item} />
 	));
 
@@ -39,10 +47,27 @@ export function Navbar({ data }: Props) {
 		<>
 			<LoadingOverlay visible={isLoggingOut} overlayProps={{ blur: 2 }} />
 			<ScrollArea className={classes.links}>
-				<div className={classes.linksInner}>{links}</div>
+				<div className={classes.linksInner}>
+					{isLoading ? (
+						<>
+							{Array.from({ length: 4 }).map((_, i) => (
+								<Skeleton mx={10} key={i} height={32} mt={i === 0 ? 0 : 12} radius="sm" />
+							))}
+						</>
+					) : (
+						links
+					)}
+				</div>
 			</ScrollArea>
 			{/* //TODO: Afficher le nom et l'email de l'utilisateur */}
-			{user && (
+			{isLoading ? (
+				<div className={classes.footer}>
+					<Skeleton height={40} width={180} radius="xl" mb={8} />
+					<Flex justify="flex-start" ml={50} mb={10}>
+						<Skeleton height={28} width={90} radius="sm" />
+					</Flex>
+				</div>
+			) : user && (
 				<div className={classes.footer}>
 					<UserButton
 						image="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=255&q=80"

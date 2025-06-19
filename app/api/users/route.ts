@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import axios from "axios";
 import { cookies } from "next/headers";
+import { NextRequest } from "next/server";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -59,28 +60,86 @@ export async function GET(request: Request) {
 }
 
 // POST /api/users
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
 	try {
-		const data = await request.json();
-		const cookieStore = cookies();
-		const token = cookieStore.get("auth_token")?.value;
+		// Récupérer le token d'authentification depuis les cookies
+		const token = request.cookies.get("auth_token")?.value;
 
 		if (!token) {
-			return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+			return NextResponse.json(
+				{ error: "Token d'authentification manquant" },
+				{ status: 401 }
+			);
 		}
 
-		const response = await axios.post(`${API_URL}/users`, data, {
+		const body = await request.json();
+		console.log(
+			"Données envoyées au backend pour création d'utilisateur système:",
+			body
+		);
+
+		// Appeler la route backend pour créer un utilisateur système
+		const backendUrl =
+			process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+		const response = await fetch(`${backendUrl}/users`, {
+			method: "POST",
 			headers: {
 				Authorization: `Bearer ${token}`,
+				"Content-Type": "application/json",
 			},
+			body: JSON.stringify(body),
 		});
-		return NextResponse.json(response.data);
-	} catch (error: any) {
-		console.error("Erreur lors de la création de l'utilisateur:", error);
-		const status = error.response?.status || 500;
-		const message =
-			error.response?.data?.message ||
-			"Erreur lors de la création de l'utilisateur";
-		return NextResponse.json({ error: message }, { status });
+
+		const contentType = response.headers.get("content-type");
+		if (!contentType || !contentType.includes("application/json")) {
+			console.error("Réponse non-JSON du backend:", await response.text());
+			return NextResponse.json(
+				{ error: "Réponse invalide du serveur backend" },
+				{ status: 500 }
+			);
+		}
+
+		const data = await response.json();
+		console.log("Réponse du backend pour création d'utilisateur:", data);
+
+		if (!response.ok) {
+			// Améliorer les messages d'erreur
+			let errorMessage =
+				data.message || `Erreur ${response.status}: ${response.statusText}`;
+
+			// Messages d'erreur plus parlants
+			if (response.status === 400) {
+				if (data.message?.includes("email")) {
+					errorMessage = "Cette adresse email est déjà utilisée";
+				} else if (data.message?.includes("password")) {
+					errorMessage =
+						"Le mot de passe ne respecte pas les critères de sécurité";
+				} else if (data.message?.includes("role")) {
+					errorMessage = "Le rôle sélectionné n'est pas valide";
+				} else {
+					errorMessage = "Les données fournies sont incomplètes ou incorrectes";
+				}
+			} else if (response.status === 401) {
+				errorMessage =
+					"Vous n'avez pas les permissions pour créer des utilisateurs système";
+			} else if (response.status === 403) {
+				errorMessage = "Accès refusé - permissions insuffisantes";
+			} else if (response.status === 409) {
+				errorMessage = "Un utilisateur avec cette adresse email existe déjà";
+			}
+
+			return NextResponse.json(
+				{ error: errorMessage },
+				{ status: response.status }
+			);
+		}
+
+		return NextResponse.json(data);
+	} catch (error) {
+		console.error("Erreur lors de la création d'utilisateur système:", error);
+		return NextResponse.json(
+			{ error: "Erreur de connexion au serveur backend" },
+			{ status: 500 }
+		);
 	}
 }
