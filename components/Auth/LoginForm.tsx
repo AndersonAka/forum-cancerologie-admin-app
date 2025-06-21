@@ -29,10 +29,7 @@ export function LoginForm() {
 		setIsLoading(true);
 		setErrorMessage("");
 		try {
-			console.log("Début de la tentative de connexion", email, password);
 			const response = await login({ email, password });
-			console.log("Réponse de connexion:", response);
-
 			if (response.user) {
 				if (response.user.role === "USER") {
 					const msg = "Vous n'avez pas accès à l'administration. Veuillez contacter un administrateur si besoin.";
@@ -42,9 +39,7 @@ export function LoginForm() {
 				}
 				showSuccess("Connexion réussie");
 				const from = searchParams.get("from") || "/dashboard";
-				console.log("Redirection vers:", from);
 
-				// Utiliser window.location.href pour forcer la redirection
 				setTimeout(() => {
 					window.location.href = from;
 				}, 100);
@@ -53,11 +48,8 @@ export function LoginForm() {
 				showError("Erreur lors de la connexion");
 			}
 		} catch (error: any) {
-			console.error("Erreur de connexion:", error);
-
 			let friendlyMessage = "Une erreur est survenue. Veuillez réessayer plus tard.";
 
-			// Axios error
 			if (error?.response) {
 				// Erreur du backend
 				if (error.response.data?.error) {

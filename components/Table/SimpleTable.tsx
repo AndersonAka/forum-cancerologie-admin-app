@@ -42,6 +42,8 @@ interface SimpleTableProps<T extends Record<string, any>> {
 	rowSelection?: any;
 	onRowSelectionChange?: (updaterOrValue: any) => void;
 	enableRowSelection?: boolean;
+	/** Active l'affichage d'une colonne de numérotation automatique (#) */
+	enableRowNumbers?: boolean;
 }
 
 export function SimpleTable<T extends Record<string, any>>({
@@ -68,11 +70,26 @@ export function SimpleTable<T extends Record<string, any>>({
 	rowSelection,
 	onRowSelectionChange,
 	enableRowSelection = true,
+	enableRowNumbers = false,
 }: SimpleTableProps<T>) {
 	const tableColumns = useMemo<MRT_ColumnDef<T>[]>(() => {
 		const baseColumns = [...columns];
+		if (enableRowNumbers) {
+			baseColumns.unshift({
+				id: "row-number",
+				header: "#",
+				size: 60,
+				Cell: ({ row, table }: { row: any; table: any }) => {
+					// Calculer le numéro en tenant compte de la pagination
+					const pageIndex = table.getState().pagination.pageIndex;
+					const pageSize = table.getState().pagination.pageSize;
+					const rowNumber = pageIndex * pageSize + row.index + 1;
+					return rowNumber;
+				},
+			});
+		}
 		return baseColumns;
-	}, [columns, enableRowActions, onEdit, onDelete]);
+	}, [columns, enableRowActions, onEdit, onDelete, enableRowNumbers]);
 
 	const handleAdd = () => {
 		if (onAdd) {
@@ -134,6 +151,7 @@ export function SimpleTable<T extends Record<string, any>>({
 				onSortingChange={onSortingChange}
 				{...(onRowSelectionChange ? { onRowSelectionChange } : {})}
 				rowCount={rowCount}
+				manualPagination={true}
 				mantineTableHeadCellProps={{
 					style: {
 						fontWeight: "bold",

@@ -33,35 +33,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const isParticipant = role === "USER";
 
 	useEffect(() => {
-		const initializeAuth = async () => {
-			console.log("Initialisation de l'authentification...");
-			try {
-				const storedUser = authService.getUser();
-				if (storedUser) {
-					console.log("Utilisateur trouvé dans le stockage");
-					setUser(storedUser);
-					setIsAuthenticated(true);
-				} else {
-					console.log("Aucun utilisateur trouvé, vérification du token...");
-					const token = authService.getToken();
-					if (token) {
-						try {
-							console.log("Token trouvé, récupération des informations utilisateur...");
-							const user = await authService.getCurrentUser();
-							setUser(user);
-							setIsAuthenticated(true);
-						} catch (error) {
-							console.error("Erreur lors de la récupération des informations utilisateur:", error);
-							authService.logout();
-						}
+		const initAuth = async () => {
+			const user = authService.getUser();
+			if (user) {
+				setUser(user);
+				setIsAuthenticated(true);
+				setIsLoading(false);
+			} else {
+				const token = authService.getToken();
+				if (token) {
+					try {
+						// Optionnel : vérifier la validité du token avec le backend
+						setUser(null);
+					} catch (error) {
+						authService.logout();
 					}
 				}
-			} finally {
 				setIsLoading(false);
 			}
 		};
 
-		initializeAuth();
+		initAuth();
 	}, []);
 
 	// Auto-déconnexion après 30 min d'inactivité
@@ -98,19 +90,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 	const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
 		try {
-			console.log("Tentative de connexion dans le contexte...");
-			setError(null);
+			setIsLoading(true);
 			const response = await authService.login(credentials);
-			console.log("Réponse de connexion reçue:", response);
-
 			const token = response.access_token || response.token;
 			if (token) {
-				console.log("Stockage du token...");
 				authService.setToken(token);
 			}
 
 			if (response.user) {
-				console.log("Stockage de l'utilisateur...");
 				authService.setUser(response.user);
 				setUser(response.user);
 				setIsAuthenticated(true);
@@ -136,7 +123,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	};
 
 	const logout = () => {
-		console.log("Déconnexion dans le contexte...");
 		authService.logout();
 		setUser(null);
 		setIsAuthenticated(false);
@@ -167,7 +153,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
 	const context = useContext(AuthContext);
 	if (context === undefined) {
-		throw new Error('useAuth doit être utilisé à l\'intérieur d\'un AuthProvider');
+		throw new Error(
+			"useAuth doit être utilisé à l'intérieur d'un AuthProvider"
+		);
 	}
 	return context;
 }

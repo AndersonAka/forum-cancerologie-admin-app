@@ -178,15 +178,6 @@ const UserForm: React.FC<UserFormProps> = ({
 			if (values.password) {
 				requestData.password = values.password;
 			}
-
-			console.log('Envoi des données:', {
-				url,
-				method,
-				requestData,
-				isEditing,
-				userId: user?.id
-			});
-
 			const response = await fetch(url, {
 				method,
 				headers: {
@@ -196,22 +187,13 @@ const UserForm: React.FC<UserFormProps> = ({
 				body: JSON.stringify(requestData),
 			});
 
-			console.log('Réponse brute:', {
-				status: response.status,
-				statusText: response.statusText,
-				headers: Object.fromEntries(response.headers.entries()),
-				ok: response.ok
-			});
-
 			// Essayer de lire le contenu de la réponse
 			const responseText = await response.text();
-			console.log('Contenu de la réponse:', responseText);
 
 			// Vérifier si c'est du JSON valide
 			let result;
 			try {
 				result = JSON.parse(responseText);
-				console.log('Réponse parsée:', result);
 			} catch (parseError) {
 				console.error('Erreur de parsing JSON:', parseError);
 				console.error('Contenu non-JSON reçu:', responseText);
@@ -278,8 +260,6 @@ const UserForm: React.FC<UserFormProps> = ({
 			const errorMessage = err instanceof Error ? err.message : 'Une erreur inattendue s\'est produite';
 			setError(errorMessage);
 
-			console.error('Erreur lors de la soumission:', err);
-
 			notifications.show({
 				title: 'Erreur',
 				message: errorMessage,
@@ -328,12 +308,10 @@ const UserForm: React.FC<UserFormProps> = ({
 			const contentType = response.headers.get("content-type");
 			if (!contentType || !contentType.includes("application/json")) {
 				const responseText = await response.text();
-				console.error("Réponse non-JSON:", responseText);
 				throw new Error('Réponse invalide du serveur');
 			}
 
 			const result = await response.json();
-			console.log('Réponse du serveur (suppression):', result);
 
 			if (!response.ok) {
 				// Améliorer les messages d'erreur
@@ -365,9 +343,6 @@ const UserForm: React.FC<UserFormProps> = ({
 		} catch (err) {
 			const errorMessage = err instanceof Error ? err.message : 'Une erreur inattendue s\'est produite';
 			setError(errorMessage);
-
-			console.error('Erreur lors de la suppression:', err);
-
 			notifications.show({
 				title: 'Erreur',
 				message: errorMessage,

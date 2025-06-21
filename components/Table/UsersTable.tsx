@@ -198,6 +198,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ refreshTrigger }) => {
 					enableRowSelection={false}
 					enableRowActions={true}
 					onEdit={handleEditUser}
+					enableRowNumbers={true}
 				/>
 
 				<UserForm

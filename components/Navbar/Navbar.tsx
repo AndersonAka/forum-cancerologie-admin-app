@@ -8,6 +8,7 @@ import { NavLinksGroup } from "./NavLinksGroup";
 import classes from "./Navbar.module.css";
 import { useAuth } from "contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import { UserProfile } from "../UserProfile/UserProfile";
 
 interface Props {
 	data: NavItem[];
@@ -32,6 +33,7 @@ export function Navbar({ data }: Props) {
 			setIsLoggingOut(false);
 		}
 	};
+
 
 	// Filtrage des liens selon le rôle
 	const filteredLinks = data.filter((item) => {
@@ -63,29 +65,14 @@ export function Navbar({ data }: Props) {
 			{isLoading ? (
 				<div className={classes.footer}>
 					<Skeleton height={40} width={180} radius="xl" mb={8} />
-					<Flex justify="flex-start" ml={50} mb={10}>
+					<Flex justify="flex-start" ml={10} mb={20}>
 						<Skeleton height={28} width={90} radius="sm" />
 					</Flex>
 				</div>
 			) : user && (
-				<div className={classes.footer}>
-					<UserButton
-						image="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=255&q=80"
-						name={`${user.firstName} ${user.lastName}`}
-						email={user.email}
-					/>
-					<Flex justify="flex-start" ml={50} mb={10}>
-						<Button
-							variant="outline"
-							onClick={handleLogout}
-							size="xs"
-							color="red"
-							loading={isLoggingOut}
-						>
-							Déconnexion
-						</Button>
-					</Flex>
-				</div>
+				<Flex justify="center" ml={10} mb={20}>
+					<UserProfile showDropdown={true} size="md" variant="default" color="black" />
+				</Flex>
 			)}
 		</>
 	);

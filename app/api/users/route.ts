@@ -73,10 +73,6 @@ export async function POST(request: NextRequest) {
 		}
 
 		const body = await request.json();
-		console.log(
-			"Données envoyées au backend pour création d'utilisateur système:",
-			body
-		);
 
 		// Appeler la route backend pour créer un utilisateur système
 		const backendUrl =
@@ -92,7 +88,6 @@ export async function POST(request: NextRequest) {
 
 		const contentType = response.headers.get("content-type");
 		if (!contentType || !contentType.includes("application/json")) {
-			console.error("Réponse non-JSON du backend:", await response.text());
 			return NextResponse.json(
 				{ error: "Réponse invalide du serveur backend" },
 				{ status: 500 }
@@ -100,7 +95,6 @@ export async function POST(request: NextRequest) {
 		}
 
 		const data = await response.json();
-		console.log("Réponse du backend pour création d'utilisateur:", data);
 
 		if (!response.ok) {
 			// Améliorer les messages d'erreur

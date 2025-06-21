@@ -45,21 +45,16 @@ class AuthService {
 
 	async login(credentials: LoginCredentials): Promise<AuthResponse> {
 		try {
-			console.log("Tentative de connexion avec:", credentials.email);
 			const response = await apiService.post<AuthResponse>(
 				"/auth/login",
 				credentials
 			);
-			console.log("Réponse du serveur:", response);
-
 			const token = response.access_token || response.token;
 			if (token) {
-				console.log("Token reçu, stockage en cours...");
 				this.setToken(token);
 			}
 
 			if (response.user) {
-				console.log("Utilisateur reçu, stockage en cours...");
 				this.setUser(response.user);
 			}
 
@@ -76,8 +71,6 @@ class AuthService {
 				"/register",
 				data
 			);
-			console.log("Réponse du backend lors de l'inscription:", response);
-
 			return {
 				user: response,
 				message:
@@ -103,7 +96,6 @@ class AuthService {
 	}
 
 	logout() {
-		console.log("Déconnexion en cours...");
 		document.cookie = `${this.TOKEN_KEY}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
 		localStorage.removeItem(this.USER_KEY);
 	}
@@ -115,7 +107,6 @@ class AuthService {
 				cookie.trim().startsWith(`${this.TOKEN_KEY}=`)
 			);
 			const token = tokenCookie ? tokenCookie.split("=")[1] : null;
-			console.log("Token récupéré:", token ? "présent" : "absent");
 			return token;
 		}
 		return null;
@@ -125,7 +116,6 @@ class AuthService {
 		if (typeof window !== "undefined") {
 			const userStr = localStorage.getItem(this.USER_KEY);
 			const user = userStr ? JSON.parse(userStr) : null;
-			console.log("Utilisateur récupéré:", user ? "présent" : "absent");
 			return user;
 		}
 		return null;
@@ -133,12 +123,10 @@ class AuthService {
 
 	isAuthenticated(): boolean {
 		const isAuth = !!this.getToken() || !!this.getUser();
-		console.log("État d'authentification:", isAuth);
 		return isAuth;
 	}
 
 	setToken(token: string) {
-		console.log("Stockage du token...");
 		const expires = new Date();
 		expires.setDate(expires.getDate() + 7); // Expire dans 7 jours
 		document.cookie = `${
@@ -149,7 +137,6 @@ class AuthService {
 	}
 
 	setUser(user: AuthResponse["user"]) {
-		console.log("Stockage de l'utilisateur...");
 		localStorage.setItem(this.USER_KEY, JSON.stringify(user));
 	}
 }

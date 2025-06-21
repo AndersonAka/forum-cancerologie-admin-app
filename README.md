@@ -108,7 +108,6 @@ This project features all the latest tools and good practices in web development
 
 - ⛔ **[ESLint](https://eslint.org)** – Find and fix problems in your JavaScript code
 - 🎀 **[Prettier](https://prettier.io)** – An opinionated code formatter, supporting multiple languages and code editors
-- 🐺 **[Husky](https://github.com/typicode/husky)** – Modern native Git hooks made easy
 - 💩 **[lint-staged](https://github.com/okonet/lint-staged)** – Run linters against staged git files and don't let 💩 slip into your code base
 - 📓 **[commitlint](https://commitlint.js.org)** – Helps your team adhering to a commit convention
 - 🏷️ **[Standard Version](https://github.com/conventional-changelog/standard-version)** – A utility for versioning using semver and CHANGELOG generation powered by Conventional Commits
@@ -343,7 +342,6 @@ See below the file tree to understand the project structure.
 ```txt
 📂 mantine-admin/
 ┣ 📂 .github/                   # GitHub's folder configs **
-┣ 📂 .husky/                    # Husky's folder
 ┃ ┣ 📃 commit-msg               # Commitlint git hook
 ┃ ┗ 📃 pre-commit               # Lint-staged git hook
 ┣ 📂 .vscode/                   # VSCode's workspace **

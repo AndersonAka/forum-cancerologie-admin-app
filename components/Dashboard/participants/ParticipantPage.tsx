@@ -39,8 +39,6 @@ export default function ParticipantPage() {
 	const [participants, setParticipants] = useState<Participant[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [pagination, setPagination] = useState<MRT_PaginationState>({ pageIndex: 0, pageSize: 10 });
-	const [page, setPage] = useState(1);
-	const [pageSize, setPageSize] = useState(10);
 	const [selected, setSelected] = useState<Participant | null>(null);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [dateFrom, setDateFrom] = useState<string>("");
@@ -81,7 +79,7 @@ export default function ParticipantPage() {
 
 	const columns = [
 		{ header: "Titre", accessorFn: (row: Participant) => (row.title || "").toUpperCase() },
-		{ header: "Nom et prénoms", accessorFn: (row: Participant) => `${row.firstName || ""} ${row.lastName || ""}`.trim().toUpperCase() },
+		{ header: "Nom et prénoms", accessorFn: (row: Participant) => `${row.lastName?.toUpperCase() || ""} ${row.firstName?.toUpperCase() || ""}`.trim().toUpperCase() },
 		{ header: "Email", accessorFn: (row: Participant) => (row.email || "").toLowerCase() },
 		{ header: "Téléphone", accessorFn: (row: Participant) => (row.phoneNumber || "").toUpperCase() },
 		{ header: "Pays", accessorFn: (row: Participant) => (row.country || "").toUpperCase() },
@@ -91,25 +89,25 @@ export default function ParticipantPage() {
 				if (row.participationMode) {
 					return row.participationMode.toUpperCase();
 				}
-				if (row.userJourney?.some((uj: any) => uj.type === 'online')) {
+				if (row.userJourney?.some((uj: any) => uj.type === 'en ligne')) {
 					return "EN LIGNE";
-				} else if (row.userJourney?.some((uj: any) => uj.type === 'onsite')) {
+				} else if (row.userJourney?.some((uj: any) => uj.type === 'présentiel')) {
 					return "EN PRÉSENTIEL";
 				} else {
 					return "MIXTE";
 				}
 			}
 		},
-		{ header: "Vidéos vues", accessorFn: (row: any) => row.videoWatches?.length ?? 0 },
-		{
-			header: "Dernière activité", accessorFn: (row: any) => {
-				if (!row.userJourney?.length) return "-";
-				const last = row.userJourney.reduce((a: any, b: any) =>
-					new Date(a.timestamp) > new Date(b.timestamp) ? a : b
-				);
-				return new Date(last.timestamp).toLocaleString();
-			}
-		},
+		// { header: "Vidéos vues", accessorFn: (row: any) => row.videoWatches?.length ?? 0 },
+		// {
+		// 	header: "Dernière activité", accessorFn: (row: any) => {
+		// 		if (!row.userJourney?.length) return "-";
+		// 		const last = row.userJourney.reduce((a: any, b: any) =>
+		// 			new Date(a.timestamp) > new Date(b.timestamp) ? a : b
+		// 		);
+		// 		return new Date(last.timestamp).toLocaleString();
+		// 	}
+		// },
 		{
 			header: "Détail",
 			accessorFn: (row: Participant) => row.id,
@@ -148,7 +146,7 @@ export default function ParticipantPage() {
 						doc.text('Nom :', 20, y);
 						doc.setFont('helvetica', 'normal');
 						doc.setTextColor(0, 0, 0);
-						doc.text(participant.lastName?.toUpperCase() || '-', 50, y);
+						doc.text(participant.lastName?.toUpperCase() || '-' + ' ' + participant.firstName?.toUpperCase() || '-', 50, y);
 						y += 8;
 						doc.setFont('helvetica', 'bold');
 						doc.setTextColor(0, 63, 155);
@@ -239,11 +237,11 @@ export default function ParticipantPage() {
 				};
 				return (
 					<Group gap={5}>
-						<Tooltip label="Voir détail" withArrow>
+						{/* <Tooltip label="Voir détail" withArrow>
 							<Button size="xs" variant="outline" onClick={() => { setSelected(row.original); setModalOpen(true); }}>
 								<IconEye size={15} />
 							</Button>
-						</Tooltip>
+						</Tooltip> */}
 						<Tooltip label="Fiche consentement" withArrow>
 							<Button size="xs" variant="outline" color="red" onClick={handleConsentPDF}>
 								<IconCertificate size={15} />
@@ -271,10 +269,16 @@ export default function ParticipantPage() {
 		});
 	});
 
+	// Calcul des données paginées
+	const paginatedData = filteredParticipants.slice(
+		pagination.pageIndex * pagination.pageSize,
+		(pagination.pageIndex + 1) * pagination.pageSize
+	);
+
 	const handleExportExcel = () => {
 		const exportData = filteredParticipants.map((row) => ({
 			Titre: row.title || "",
-			"Nom et prénoms": `${row.firstName || ""} ${row.lastName || ""}`.trim(),
+			"Nom et prénoms": `${row.lastName?.toUpperCase() || ""} ${row.firstName?.toUpperCase() || ""}`.trim(),
 			Email: row.email,
 			Téléphone: row.phoneNumber || "",
 			Pays: row.country || "",
@@ -288,10 +292,10 @@ export default function ParticipantPage() {
 					return "MIXTE";
 				}
 			})(),
-			"Vidéos vues": row.videoWatches?.length ?? 0,
-			"Dernière activité": row.userJourney?.length
-				? new Date(row.userJourney.reduce((a: any, b: any) => new Date(a.timestamp) > new Date(b.timestamp) ? a : b).timestamp).toLocaleString()
-				: "-",
+			// "Vidéos vues": row.videoWatches?.length ?? 0,
+			// "Dernière activité": row.userJourney?.length
+			// 	? new Date(row.userJourney.reduce((a: any, b: any) => new Date(a.timestamp) > new Date(b.timestamp) ? a : b).timestamp).toLocaleString()
+			// 	: "-",
 		}));
 		const ws = XLSX.utils.json_to_sheet(exportData);
 		const wb = XLSX.utils.book_new();
@@ -300,14 +304,15 @@ export default function ParticipantPage() {
 	};
 
 	const handleExportPDF = () => {
-		const doc = new jsPDF();
-
+		const doc = new jsPDF({ orientation: "landscape" });
 		const img = new window.Image();
+		const pageWidth = doc.internal.pageSize.getWidth();
+		const pageHeight = doc.internal.pageSize.getHeight();
 		img.src = "/logo-forum-cancer.png"; // Chemin relatif à /public
 
 		img.onload = () => {
 			// Logo en haut à droite (dimensions ajustées pour éviter l'étirement)
-			doc.addImage(img, "PNG", 160, 10, 25, 20);
+			doc.addImage(img, "PNG", pageWidth - 40, 10, 25, 20);
 
 			// Titre principal (bleu, grand)
 			doc.setFontSize(20);
@@ -324,7 +329,7 @@ export default function ParticipantPage() {
 			// Ligne de séparation
 			doc.setDrawColor(0, 63, 155);
 			doc.setLineWidth(0.5);
-			doc.line(14, 32, 196, 32);
+			doc.line(14, 32, pageWidth - 14, 32);
 
 			// Période de filtre si applicable
 			const filterText = getFilterPeriodText();
@@ -350,33 +355,35 @@ export default function ParticipantPage() {
 			doc.setFontSize(10);
 			doc.setFont('helvetica', 'bold');
 			doc.setTextColor(0, 63, 155);
-			doc.text(`Total participants : ${filteredParticipants.length}`, 14, filterText ? 62 : 48);
+			doc.text(`Total participants : ${filteredParticipants.length} (En ligne : ${totalEnLigne}, En présentiel : ${totalPresentiel})`, 14, filterText ? 62 : 48);
 
 			// Tableau
 			const tableColumn = [
-				"Titre", "Nom et prénoms", "Email", "Téléphone", "Pays", "Spécialité",
-				"Mode de participation", "Vidéos vues", "Dernière activité"
+				"#", "Titre", "Nom et prénoms", "Email", "Téléphone", "Pays", "Spécialité",
+				"Mode de participation"
+				// "Vidéos vues", "Dernière activité"
 			];
-			const tableRows = filteredParticipants.map((row) => [
+			const tableRows = filteredParticipants.map((row, index) => [
+				(index + 1).toString(),
 				row.title || "",
-				`${row.firstName || ""} ${row.lastName || ""}`.trim(),
+				`${row.lastName || ""} ${row.firstName?.toUpperCase() || ""}`.trim(),
 				row.email,
 				row.phoneNumber || "",
 				row.country || "",
 				row.specialty || "",
 				(() => {
-					if (row.userJourney?.some((uj: any) => uj.type === 'online')) {
+					if (row.participationMode?.toLowerCase() === 'en ligne') {
 						return "EN LIGNE";
-					} else if (row.userJourney?.some((uj: any) => uj.type === 'onsite')) {
+					} else if (row.participationMode?.toLowerCase() === 'présentiel') {
 						return "EN PRÉSENTIEL";
 					} else {
 						return "MIXTE";
 					}
 				})(),
-				row.videoWatches?.length ?? 0,
-				row.userJourney?.length
-					? new Date(row.userJourney.reduce((a, b) => new Date(a.timestamp) > new Date(b.timestamp) ? a : b).timestamp).toLocaleString()
-					: "-",
+				// row.videoWatches?.length ?? 0,
+				// row.userJourney?.length
+				// 	? new Date(row.userJourney.reduce((a, b) => new Date(a.timestamp) > new Date(b.timestamp) ? a : b).timestamp).toLocaleString()
+				// 	: "-",
 			]);
 
 			// Position de départ du tableau ajustée selon le contenu
@@ -397,22 +404,15 @@ export default function ParticipantPage() {
 				doc.setPage(i);
 				doc.setFontSize(9);
 				doc.text(`Page ${i} / ${pageCount}`, 14, doc.internal.pageSize.height - 10);
-				doc.addImage(img, "PNG", 170, doc.internal.pageSize.height - 15, 15, 12);
 			}
 
-			doc.save("LISTE_DES_PARTICIPANTS.pdf");
+			doc.save("LISTE-DES-PARTICIPANTS-ROCHE.pdf");
 		};
 
 		img.onerror = () => {
 			alert("Erreur de chargement du logo !");
 		};
 	};
-
-	// Découpage des données pour la page courante
-	const paginatedParticipants = filteredParticipants.slice(
-		(page - 1) * pageSize,
-		page * pageSize
-	);
 
 	// Génération du texte de période de filtre
 	const getFilterPeriodText = () => {
@@ -446,8 +446,8 @@ export default function ParticipantPage() {
 	};
 
 	const total = filteredParticipants.length;
-	const totalEnLigne = filteredParticipants.filter(p => (p.participationMode?.toLowerCase() === 'en ligne') || (!p.participationMode && p.userJourney?.some((uj: any) => uj.type === 'online'))).length;
-	const totalPresentiel = filteredParticipants.filter(p => (p.participationMode?.toLowerCase() === 'présentiel') || (!p.participationMode && p.userJourney?.some((uj: any) => uj.type === 'onsite'))).length;
+	const totalEnLigne = filteredParticipants.filter(p => (p.participationMode?.toLowerCase() === 'en ligne') || (!p.participationMode && p.userJourney?.some((uj: any) => uj.type === 'en ligne'))).length;
+	const totalPresentiel = filteredParticipants.filter(p => (p.participationMode?.toLowerCase() === 'présentiel') || (!p.participationMode && p.userJourney?.some((uj: any) => uj.type === 'présentiel'))).length;
 
 	// Génération groupée des fiches de consentement
 	const handleExportConsentGroup = async () => {
@@ -539,7 +539,7 @@ export default function ParticipantPage() {
 				doc.text('Nom :', 20, y);
 				doc.setFont('helvetica', 'normal');
 				doc.setTextColor(0, 0, 0);
-				doc.text(participant.lastName?.toUpperCase() || '-', 50, y);
+				doc.text(participant.lastName?.toUpperCase() || '-' + ' ' + participant.firstName?.toUpperCase() || '-', 50, y);
 				y += 8;
 				doc.setFont('helvetica', 'bold');
 				doc.setTextColor(0, 63, 155);
@@ -630,6 +630,127 @@ export default function ParticipantPage() {
 		});
 	}
 
+	// Fonctions d'export pour TOUS les participants (sans filtre)
+	const handleExportAllExcel = () => {
+		const exportData = participants.map((row) => ({
+			Titre: row.title || "",
+			"Nom et prénoms": `${row.lastName?.toUpperCase() || ""} ${row.firstName?.toUpperCase() || ""}`.trim(),
+			Email: row.email,
+			Téléphone: row.phoneNumber || "",
+			Pays: row.country || "",
+			Spécialité: row.specialty || "",
+			"Mode de participation": (() => {
+				if (row.participationMode?.toLowerCase() === 'en ligne') {
+					return "EN LIGNE";
+				} else if (row.participationMode?.toLowerCase() === 'présentiel') {
+					return "EN PRÉSENTIEL";
+				} else {
+					return "MIXTE";
+				}
+			})(),
+		}));
+		const ws = XLSX.utils.json_to_sheet(exportData);
+		const wb = XLSX.utils.book_new();
+		XLSX.utils.book_append_sheet(wb, ws, "Tous les participants");
+		XLSX.writeFile(wb, "tous-les-participants.xlsx");
+	};
+
+	const handleExportAllPDF = () => {
+		const doc = new jsPDF({ orientation: "landscape" });
+		const img = new window.Image();
+		const pageWidth = doc.internal.pageSize.getWidth();
+		const pageHeight = doc.internal.pageSize.getHeight();
+		img.src = "/logo-forum-cancer.png";
+
+		img.onload = () => {
+			// Logo en haut à droite
+			doc.addImage(img, "PNG", pageWidth - 40, 10, 25, 20);
+
+			// Titre principal
+			doc.setFontSize(20);
+			doc.setFont('helvetica', 'bold');
+			doc.setTextColor(0, 63, 155);
+			doc.text('Forum de Cancérologie de ROCHE', 14, 20);
+
+			// Sous-titre
+			doc.setFontSize(13);
+			doc.setFont('helvetica', 'normal');
+			doc.setTextColor(0, 0, 0);
+			doc.text('Liste de tous les participants', 14, 28);
+
+			// Ligne de séparation
+			doc.setDrawColor(0, 63, 155);
+			doc.setLineWidth(0.5);
+			doc.line(14, 32, pageWidth - 14, 32);
+
+			// Date d'export et total participants
+			doc.setFontSize(9);
+			doc.setFont('helvetica', 'italic');
+			doc.setTextColor(100, 100, 100);
+			const exportDate = new Date().toLocaleDateString('fr-FR', {
+				day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+			});
+			doc.text(`Document généré le ${exportDate}`, 14, 40);
+
+			// Calcul des totaux pour tous les participants
+			const totalAll = participants.length;
+			const totalAllEnLigne = participants.filter(p => (p.participationMode?.toLowerCase() === 'en ligne') || (!p.participationMode && p.userJourney?.some((uj: any) => uj.type === 'en ligne'))).length;
+			const totalAllPresentiel = participants.filter(p => (p.participationMode?.toLowerCase() === 'présentiel') || (!p.participationMode && p.userJourney?.some((uj: any) => uj.type === 'présentiel'))).length;
+
+			doc.setFontSize(10);
+			doc.setFont('helvetica', 'bold');
+			doc.setTextColor(0, 63, 155);
+			doc.text(`Total participants : ${totalAll} (En ligne : ${totalAllEnLigne}, En présentiel : ${totalAllPresentiel})`, 14, 48);
+
+			// Tableau
+			const tableColumn = [
+				"#", "Titre", "Nom et prénoms", "Email", "Téléphone", "Pays", "Spécialité",
+				"Mode de participation"
+			];
+			const tableRows = participants.map((row, index) => [
+				(index + 1).toString(),
+				row.title || "",
+				`${row.lastName || ""} ${row.firstName?.toUpperCase() || ""}`.trim(),
+				row.email,
+				row.phoneNumber || "",
+				row.country || "",
+				row.specialty || "",
+				(() => {
+					if (row.participationMode?.toLowerCase() === 'en ligne') {
+						return "EN LIGNE";
+					} else if (row.participationMode?.toLowerCase() === 'présentiel') {
+						return "EN PRÉSENTIEL";
+					} else {
+						return "MIXTE";
+					}
+				})(),
+			]);
+
+			autoTable(doc, {
+				head: [tableColumn],
+				body: tableRows,
+				startY: 56,
+				styles: { fontSize: 8 },
+				headStyles: { fillColor: [0, 63, 155], textColor: 255, fontStyle: 'bold' },
+				alternateRowStyles: { fillColor: [245, 248, 255] },
+			});
+
+			// Pagination et logo en pied de page
+			const pageCount = doc.getNumberOfPages();
+			for (let i = 1; i <= pageCount; i++) {
+				doc.setPage(i);
+				doc.setFontSize(9);
+				doc.text(`Page ${i} / ${pageCount}`, 14, doc.internal.pageSize.height - 10);
+			}
+
+			doc.save("TOUS-LES-PARTICIPANTS-ROCHE.pdf");
+		};
+
+		img.onerror = () => {
+			alert("Erreur de chargement du logo !");
+		};
+	};
+
 	return (
 		<PageContainer title={<TitrePage
 			title="Liste des participants"
@@ -649,6 +770,8 @@ export default function ParticipantPage() {
 				onExportExcel={handleExportExcel}
 				onExportPDF={handleExportPDF}
 				loading={loading}
+				onExportAllExcel={handleExportAllExcel}
+				onExportAllPDF={handleExportAllPDF}
 			/>
 
 			{/* Statistiques */}
@@ -664,21 +787,21 @@ export default function ParticipantPage() {
 			<SimpleTable
 				title="Participants"
 				columns={columns}
-				data={filteredParticipants}
+				data={paginatedData}
 				filterPeriodText={getFilterPeriodText()}
 				enableExport
 				exportFileName="participants"
 				exportTransform={(row) => ({
 					Titre: row.title || "",
-					"Nom et prénoms": `${row.firstName || ""} ${row.lastName || ""}`.trim(),
+					"Nom et prénoms": `${row.lastName?.toUpperCase() || ""} ${row.firstName?.toUpperCase() || ""}`.trim(),
 					Email: row.email,
 					Téléphone: row.phoneNumber || "",
 					Pays: row.country || "",
 					Spécialité: row.specialty || "",
 					"Mode de participation": (() => {
-						if (row.userJourney?.some((uj: any) => uj.type === 'en ligne')) {
+						if (row.participationMode?.toLowerCase() === 'en ligne') {
 							return "EN LIGNE";
-						} else if (row.userJourney?.some((uj: any) => uj.type === 'présentiel')) {
+						} else if (row.participationMode?.toLowerCase() === 'présentiel') {
 							return "EN PRÉSENTIEL";
 						} else {
 							return "MIXTE";
@@ -691,21 +814,16 @@ export default function ParticipantPage() {
 				})}
 				onExportExcel={handleExportExcel}
 				onExportPDF={handleExportPDF}
-				state={{ isLoading: loading, pagination: { pageIndex: 0, pageSize: 10 }, sorting: [] }}
+				state={{ isLoading: loading, pagination: pagination, sorting: [] }}
+				onPaginationChange={setPagination}
+				rowCount={filteredParticipants.length}
 				enablePagination
 				enableSorting={false}
+				enableRowNumbers={true}
 				rowSelection={rowSelection}
 				onRowSelectionChange={setRowSelection}
 			/>
 			<ParticipantDetailModal participant={selected} opened={modalOpen} onClose={() => setModalOpen(false)} />
-			{filteredParticipants.length > pageSize && (
-				<Pagination
-					mt="md"
-					value={page}
-					onChange={setPage}
-					total={Math.ceil(filteredParticipants.length / pageSize)}
-				/>
-			)}
 			<Modal opened={exporting} onClose={() => { }} withCloseButton={false} centered size="md" radius="lg">
 				<Box p="md" style={{ minHeight: 260, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
 					<Title order={4} ta="center" mb="md" style={{ color: '#2563eb', fontWeight: 700 }}>

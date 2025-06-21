@@ -321,7 +321,6 @@ export const useDashboardData = () => {
 				const response = await fetch("/api/dashboard");
 
 				if (!response.ok) {
-					console.log("Erreur API, utilisation des données de test");
 					// En cas d'erreur, utiliser les données de test
 					setData(mockDashboardData);
 					return;
@@ -330,7 +329,6 @@ export const useDashboardData = () => {
 				const dashboardData = await response.json();
 				setData(dashboardData);
 			} catch (err) {
-				console.log("Erreur réseau, utilisation des données de test");
 				// En cas d'erreur réseau, utiliser les données de test
 				setData(mockDashboardData);
 			} finally {

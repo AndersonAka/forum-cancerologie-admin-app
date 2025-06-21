@@ -35,7 +35,6 @@ export async function GET(request: NextRequest) {
 		}
 
 		const data = await response.json();
-
 		// Retourner directement les admins
 		return NextResponse.json(data);
 	} catch (error) {

@@ -10,10 +10,6 @@ export async function POST(
 	try {
 		const path = params.path.join("/");
 		const body = await request.json();
-		console.log("body", body);
-		console.log("path", path);
-		console.log("API_URL", API_URL);
-
 		const response = await fetch(`${API_URL}/auth/${path}`, {
 			method: "POST",
 			headers: {
@@ -21,10 +17,7 @@ export async function POST(
 			},
 			body: JSON.stringify(body),
 		});
-
 		const data = await response.json();
-
-		console.log("data", data);
 		if (!response.ok) {
 			return NextResponse.json(
 				{ error: data.message || "Une erreur est survenue" },
@@ -34,7 +27,6 @@ export async function POST(
 
 		return NextResponse.json(data);
 	} catch (error) {
-		console.error("Erreur API:", error);
 		return NextResponse.json(
 			{ error: "Erreur interne du serveur" },
 			{ status: 500 }
@@ -66,7 +58,6 @@ export async function GET(
 
 		return NextResponse.json(data);
 	} catch (error) {
-		console.error("Erreur API:", error);
 		return NextResponse.json(
 			{ error: "Erreur interne du serveur" },
 			{ status: 500 }

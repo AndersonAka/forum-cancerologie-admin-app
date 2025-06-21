@@ -19,12 +19,14 @@ interface UserProfileProps {
 	showDropdown?: boolean;
 	size?: 'sm' | 'md' | 'lg';
 	variant?: 'default' | 'compact';
+	color?: string
 }
 
 export function UserProfile({
 	showDropdown = true,
 	size = 'md',
-	variant = 'default'
+	variant = 'default',
+	color = 'white'
 }: UserProfileProps) {
 	const { user, logout, isLoading } = useAuth();
 	const router = useRouter();
@@ -147,7 +149,7 @@ export function UserProfile({
 						onClick={() => setMenuOpened(!menuOpened)}
 					>
 						<Avatar
-							color="white"
+							color={color ? color : 'white'}
 							radius="xl"
 							size={getAvatarSize()}
 						>
@@ -155,12 +157,12 @@ export function UserProfile({
 						</Avatar>
 						{variant !== 'compact' && (
 							<Box>
-								<Text size={getTextSize()} fw={600} c="white">
+								<Text size={getTextSize()} fw={600} c={color ? color : 'white'}>
 									{getUserDisplayName()}
 								</Text>
 							</Box>
 						)}
-						<ActionIcon variant="subtle" color="white" size="sm">
+						<ActionIcon variant="subtle" color={color ? color : 'white'} size="sm">
 							<IconChevronDown size={16} />
 						</ActionIcon>
 					</Group>
@@ -191,7 +193,7 @@ export function UserProfile({
 	return (
 		<Group gap="sm" align="center">
 			<Avatar
-				color="white"
+				color={color ? color : 'white'}
 				radius="xl"
 				size={getAvatarSize()}
 			>
@@ -199,7 +201,7 @@ export function UserProfile({
 			</Avatar>
 			{variant !== 'compact' && (
 				<Box>
-					<Text size={getTextSize()} fw={600} c="white">
+					<Text size={getTextSize()} fw={600} c={color ? color : 'white'}>
 						{getUserDisplayName()}
 					</Text>
 				</Box>

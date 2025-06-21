@@ -1,5 +1,5 @@
 "use client"
-import { Button, Group, TextInput, Flex, Title, Tooltip, ActionIcon, Box, Text, Card, Skeleton } from "@mantine/core";
+import { Button, Group, TextInput, Flex, Title, Tooltip, ActionIcon, Box, Text, Card, Skeleton, Stack } from "@mantine/core";
 import { IconX, IconFilter } from "@tabler/icons-react";
 import { useState, useEffect } from "react";
 
@@ -14,6 +14,8 @@ interface DateFilterProps {
 	showExportButtons?: boolean;
 	onExportExcel?: () => void;
 	onExportPDF?: () => void;
+	onExportAllExcel?: () => void;
+	onExportAllPDF?: () => void;
 	loading?: boolean;
 }
 
@@ -28,6 +30,8 @@ export const DateFilter = ({
 	showExportButtons = false,
 	onExportExcel,
 	onExportPDF,
+	onExportAllExcel,
+	onExportAllPDF,
 	loading = false
 }: DateFilterProps) => {
 	const [mounted, setMounted] = useState(false);
@@ -156,6 +160,7 @@ export const DateFilter = ({
 					align={{ sm: 'flex-end' }}
 					style={{ flex: 1 }}
 				>
+					<Text >Période : </Text>
 					<TextInput
 						type="date"
 						label="Du"
@@ -252,45 +257,86 @@ export const DateFilter = ({
 					</Group>
 				</Flex>
 
-				{showExportButtons && dateFrom && dateTo && onExportExcel && onExportPDF && (
-					<Group gap="xs">
-						<Button
-							onClick={onExportExcel}
-							color="teal"
-							variant="light"
-							size="sm"
-							radius="md"
-							styles={{
-								root: {
-									background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
-									color: 'white',
-									'&:hover': {
-										background: 'linear-gradient(135deg, #0f766e 0%, #0d5a52 100%)',
-									}
-								}
-							}}
-						>
-							Exporter Excel
-						</Button>
-						<Button
-							onClick={onExportPDF}
-							color="red"
-							variant="light"
-							size="sm"
-							radius="md"
-							styles={{
-								root: {
-									background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-									color: 'white',
-									'&:hover': {
-										background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
-									}
-								}
-							}}
-						>
-							Exporter PDF
-						</Button>
-					</Group>
+				{showExportButtons && (
+					<Stack gap="xs" align="flex-end">
+						{/* Boutons d'export pour TOUS les participants */}
+						{onExportAllExcel && onExportAllPDF && (
+							<Group gap="xs">
+								<Text size="md" c="dimmed" fw={800}>Export complet :</Text>
+								<Tooltip label="Export complet de tous les participants en Excel">
+									<Button
+										onClick={onExportAllExcel}
+										color="teal"
+										variant="light"
+										size="sm"
+										radius="md"
+										styles={{
+											root: {
+												background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
+												color: 'white',
+												'&:hover': {
+													background: 'linear-gradient(135deg, #0f766e 0%, #0d5a52 100%)',
+												}
+											}
+										}}
+									>
+										Excel
+									</Button>
+								</Tooltip>
+								<Tooltip label="Export complet de tous les participants en PDF">
+									<Button
+										onClick={onExportAllPDF}
+										color="red"
+										variant="light"
+										size="sm"
+										radius="md"
+										styles={{
+											root: {
+												background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+												color: 'white',
+												'&:hover': {
+													background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+												}
+											}
+										}}
+									>
+										PDF
+									</Button>
+								</Tooltip>
+							</Group>
+						)}
+						{/* Boutons d'export filtrés */}
+						{dateFrom && dateTo && onExportExcel && onExportPDF && (
+							<Group gap="xs">
+								<Text size="md" c="dimmed" fw={800}>Export filtré :</Text>
+								<Tooltip label="Export filtré de tous les participants en Excel">
+									<Button
+										onClick={onExportExcel}
+										color="teal"
+										variant="light"
+										size="sm"
+										radius="md"
+									>
+										Excel
+									</Button>
+								</Tooltip>
+								<Tooltip label="Export filtré de tous les participants en PDF">
+									<Button
+										onClick={onExportPDF}
+										color="red"
+										variant="light"
+										size="sm"
+										radius="md"
+									>
+										PDF
+									</Button>
+								</Tooltip>
+
+							</Group>
+						)}
+
+
+					</Stack>
 				)}
 			</Flex>
 		</Card>

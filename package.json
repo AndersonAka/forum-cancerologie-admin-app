@@ -3,33 +3,12 @@
   "version": "1.0.0",
   "author": "Anderson Aka",
   "description": "Admin App for Forum Cancerologie",
-  "lint-staged": {
-   "**/*.{js,ts,tsx}": [
-      "npm run lint"
-    ]
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
   "scripts": {
     "dev": "next dev",
     "start": "next start",
     "build": "next build",
-    "lint": "biome lint",
-    "format": "biome format --write .",
     "test": "jest",
     "test:watch": "jest --watch",
-    "type-check": "tsc --noEmit",
-    "release": "standard-version",
-    "release-as-major": "npm run release -- --release-as major",
-    "release-as-minor": "npm run release -- --release-as minor",
-    "release-as-patch": "npm run release -- --release-as patch",
-    "push-release": "git push --follow-tags origin main",
-    "pull": "git rebase origin main -i",
-    "pre-commit": "npm run lint",
-    "prepare": "husky install",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
@@ -91,10 +70,8 @@
     "@types/jest": "29.5.12",
     "@types/node": "20.11.16",
     "@types/react": "18.2.52",
-    "husky": "9.0.10",
     "jest": "29.7.0",
     "jest-environment-jsdom": "29.7.0",
-    "lint-staged": "15.2.1",
     "postcss": "^8.4.39",
     "postcss-preset-mantine": "^1.15.0",
     "postcss-simple-vars": "^7.0.1",
