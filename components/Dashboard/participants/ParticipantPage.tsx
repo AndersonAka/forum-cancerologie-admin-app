@@ -32,6 +32,7 @@ interface Participant {
 	videoWatches?: any[];
 	userJourney?: any[];
 	participationMode?: string;
+	workplace?: string;
 }
 
 export default function ParticipantPage() {
@@ -146,7 +147,7 @@ export default function ParticipantPage() {
 						doc.text('Nom :', 20, y);
 						doc.setFont('helvetica', 'normal');
 						doc.setTextColor(0, 0, 0);
-						doc.text(participant.lastName?.toUpperCase() || '-' + ' ' + participant.firstName?.toUpperCase() || '-', 50, y);
+						doc.text(`${participant.lastName?.toUpperCase() || '-'} ${participant.firstName?.toUpperCase() || '-'}`, 50, y);
 						y += 8;
 						doc.setFont('helvetica', 'bold');
 						doc.setTextColor(0, 63, 155);
@@ -161,6 +162,13 @@ export default function ParticipantPage() {
 						doc.setFont('helvetica', 'normal');
 						doc.setTextColor(0, 0, 0);
 						doc.text(participant.country?.toUpperCase() || '-', 50, y);
+						y += 8;
+						doc.setFont('helvetica', 'bold');
+						doc.setTextColor(0, 63, 155);
+						doc.text(`Lieu d'exercice :`, 20, y);
+						doc.setFont('helvetica', 'normal');
+						doc.setTextColor(0, 0, 0);
+						doc.text(participant.workplace?.toUpperCase() || '-', 50, y);
 						y += 8;
 						doc.setFont('helvetica', 'bold');
 						doc.setTextColor(0, 63, 155);
@@ -539,7 +547,7 @@ export default function ParticipantPage() {
 				doc.text('Nom :', 20, y);
 				doc.setFont('helvetica', 'normal');
 				doc.setTextColor(0, 0, 0);
-				doc.text(participant.lastName?.toUpperCase() || '-' + ' ' + participant.firstName?.toUpperCase() || '-', 50, y);
+				doc.text(`${participant.lastName?.toUpperCase() || '-'} ${participant.firstName?.toUpperCase() || '-'}`, 50, y);
 				y += 8;
 				doc.setFont('helvetica', 'bold');
 				doc.setTextColor(0, 63, 155);
