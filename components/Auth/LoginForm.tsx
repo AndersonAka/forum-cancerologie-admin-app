@@ -29,6 +29,9 @@ export function LoginForm() {
 		setIsLoading(true);
 		setErrorMessage("");
 		try {
+			console.log("email", email);
+			console.log("password", password);
+
 			const response = await login({ email, password });
 			if (response.user) {
 				if (response.user.role === "USER") {
@@ -79,6 +82,11 @@ export function LoginForm() {
 
 	return (
 		<form onSubmit={handleSubmit}>
+			{errorMessage && (
+				<Alert color="red" mt={16} mb={8} title="Erreur" variant="light">
+					{errorMessage}
+				</Alert>
+			)}
 			<Card withBorder shadow="md" p={30} mt={30} radius="md">
 				<TextInput
 					label="Email"
@@ -101,11 +109,7 @@ export function LoginForm() {
 					Mot de passe oublié ?
 				</Anchor> */}
 				</Group>
-				{errorMessage && (
-					<Alert color="red" mt={16} mb={8} title="Erreur" variant="light">
-						{errorMessage}
-					</Alert>
-				)}
+				
 				<Button
 					loading={isLoading}
 					fullWidth
