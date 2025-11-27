@@ -6,6 +6,7 @@ import {
 	IconMoodSmile,
 	IconUser,
 	IconEye,
+	IconVideo,
 } from "@tabler/icons-react";
 import type { NavItem } from "types/nav-item";
 
@@ -45,6 +46,12 @@ export const navLinks: NavItem[] = [
 		label: "Visites de Pages",
 		icon: IconEye,
 		link: "/dashboard/page-visits",
+		roles: ["SPADMIN", "ADMIN", "MANAGER"],
+	},
+	{
+		label: "Vidéos Regardées",
+		icon: IconVideo,
+		link: "/dashboard/video-watches",
 		roles: ["SPADMIN", "ADMIN", "MANAGER"],
 	},
 ];
